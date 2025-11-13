@@ -2,10 +2,8 @@ package com.example.roles_usuario;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -14,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
@@ -21,8 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     EditText edtNombreRol, edtDescripcionRol;
     Button btnGuardarRol;
-    ListView lvRoles;
-    ArrayAdapter<Rol> adapter;
+    RecyclerView rvRoles;
+    RolAdapter adapter;
     ArrayList<Rol> listaRoles;
     int idRolEnEdicion = -1;
     //variable para almacenar el ID
@@ -43,28 +43,35 @@ public class MainActivity extends AppCompatActivity {
         edtNombreRol = findViewById(R.id.edtNombreRol);
         edtDescripcionRol = findViewById(R.id.edtDescripcionRol);
         btnGuardarRol = findViewById(R.id.btnGuardarRol);
-        lvRoles = findViewById(R.id.lvRoles);
+        rvRoles = findViewById(R.id.rvRoles);
 
         db = new DBHelper(this);
 
+        // Configurar RecyclerView
+        rvRoles.setLayoutManager(new LinearLayoutManager(this));
+        listaRoles = new ArrayList<>();
+        adapter = new RolAdapter(listaRoles);
+        rvRoles.setAdapter(adapter);
+
         cargarRoles();
+
         //listener para Editar
-        lvRoles.setOnItemClickListener((parent, view, position, id) -> {
-            Rol rolSeleccionado = listaRoles.get(position);
+        adapter.setOnItemClickListener(position -> {
+            Rol rolSeleccionado = adapter.getRol(position);
+            if (rolSeleccionado != null) {
+                edtNombreRol.setText(rolSeleccionado.getNombre());
+                edtDescripcionRol.setText(rolSeleccionado.getDescripcion());
 
-            edtNombreRol.setText(rolSeleccionado.getNombre());
-            edtDescripcionRol.setText(rolSeleccionado.getDescripcion());
-
-            idRolEnEdicion = rolSeleccionado.getId();
-            btnGuardarRol.setText("Actualizar Rol");
-            Toast.makeText(MainActivity.this, "Editando Rol ID: " + idRolEnEdicion, Toast.LENGTH_SHORT).show();
+                idRolEnEdicion = rolSeleccionado.getId();
+                btnGuardarRol.setText("Actualizar Rol");
+                Toast.makeText(MainActivity.this, "Editando Rol ID: " + idRolEnEdicion, Toast.LENGTH_SHORT).show();
+            }
         });
 
-        //listener para Eliminarion
-        lvRoles.setOnItemLongClickListener((parent, view, position, id) -> {
-            Rol rolSeleccionado = listaRoles.get(position);
-
-
+        //listener para Eliminación
+        adapter.setOnItemLongClickListener(position -> {
+            Rol rolSeleccionado = adapter.getRol(position);
+            if (rolSeleccionado == null) return;
 
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Confirmar Eliminación")
@@ -89,9 +96,6 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("No", null) //cierra el diálogo si el usuario presiona "No"
                     .show();
-
-            cargarRoles();
-            return true;
         });
 
 
@@ -151,16 +155,10 @@ public class MainActivity extends AppCompatActivity {
         listaRoles = db.obtenerRoles();
 
         if (listaRoles != null) {
-            adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1,
-                    listaRoles);
-            lvRoles.setAdapter(adapter);
+            adapter.actualizarLista(listaRoles);
         } else {
             listaRoles = new ArrayList<>();
-            adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1,
-                    listaRoles);
-            lvRoles.setAdapter(adapter);
+            adapter.actualizarLista(listaRoles);
             Toast.makeText(this, "No se pudieron cargar los roles de la base de datos.", Toast.LENGTH_LONG).show();
         }
     }

@@ -141,12 +141,10 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <ListView
-                android:id="@+id/lvRoles"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRoles"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:divider="#E8E8E0"
-                android:dividerHeight="1dp"
                 android:padding="12dp"
                 android:clipToPadding="false"
                 android:scrollbars="vertical" />
